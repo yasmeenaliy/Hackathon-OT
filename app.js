@@ -1007,15 +1007,15 @@ function runPreflightSimulation(scenarioType) {
   // Render Gates list HTML
   let gatesHtml = `
     <div class="pipeline-token-track">
-      <div class="pipeline-token" id="preflight-token" style="width:100%; height:0%; transition: height 1.2s ease, background-color 0.3s;"></div>
+      <div class="pipeline-token" id="preflight-token" style="width:100%; height:0%; transition: height 0.35s ease, background-color 0.25s;"></div>
     </div>
   `;
 
   gates.forEach((g, idx) => {
-    let gateClass = "pass";
-    let icon = `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    let gateClass = preflightState === "pending" ? "pending" : "pass";
+    let icon = preflightState === "pending" ? "" : `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
     
-    if (g.result === "BLOCK") {
+    if (preflightState !== "pending" && g.result === "BLOCK") {
       gateClass = "fail";
       icon = `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
     }
@@ -1258,7 +1258,16 @@ function runPreflightSimulation(scenarioType) {
 
           // Highlight current gate
           const gateEl = document.getElementById(`preflight-gate-${step.gate}`);
-          if (gateEl) gateEl.style.opacity = "1";
+          if (gateEl) {
+            gateEl.style.opacity = "1";
+            if (step.msg.startsWith("Checking")) {
+              gateEl.classList.remove("pending", "pass", "fail");
+              gateEl.classList.add(step.isFail ? "fail" : "pass");
+              gateEl.querySelector(".gate-circle").innerHTML = step.isFail
+                ? `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
+                : `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            }
+          }
 
           // Advance token path
           const token = document.getElementById("preflight-token");
@@ -1275,7 +1284,7 @@ function runPreflightSimulation(scenarioType) {
           setTimeout(() => {
             preflightState = "deferred";
             runPreflightSimulation(scenarioType);
-          }, 600);
+          }, 350);
           return;
         }
 
@@ -1614,8 +1623,6 @@ const GRAPH_NODE_DATA = {
   }
 };
 
-const CRIT_LABEL = { HIGH: "HIGH RISK", MEDIUM: "MEDIUM RISK", LOW: "LOW RISK" };
-
 function drawFutureGraph() {
   const canvas = document.getElementById("future-graph-canvas");
   if (!canvas) return;
@@ -1739,15 +1746,12 @@ function renderNodePanel(data) {
   ).join("");
 
   panel.innerHTML = `
-    <div style="background-color:var(--bg-secondary); border-left:3px solid ${data.critColor}; border-radius:6px; padding:1.25rem; display:flex; flex-direction:column; gap:1rem;">
+    <div style="background-color:var(--bg-secondary); border:1px solid var(--border-color); border-radius:6px; padding:1.25rem; display:flex; flex-direction:column; gap:1rem;">
       
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:0.75rem; flex-wrap:wrap;">
+      <div>
         <div>
           <div style="font-size:1.1rem; font-weight:800; color:var(--text-primary); margin-bottom:0.15rem;">${data.label}</div>
           <div style="font-size:0.78rem; color:var(--text-muted);">${data.role}</div>
-        </div>
-        <div style="background-color:${data.critColor}22; color:${data.critColor}; font-size:0.7rem; font-weight:700; font-family:var(--font-mono); padding:0.2rem 0.6rem; border-radius:3px; white-space:nowrap; align-self:flex-start;">
-          ${CRIT_LABEL[data.criticality] || data.criticality}
         </div>
       </div>
 
