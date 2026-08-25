@@ -1,0 +1,558 @@
+// OTrust — Synthetic Hackathon Demo Data & Configurations
+// Labeled: SYNTHETIC HACKATHON DEMO DATA
+
+// SITE-CONFIGURABLE Similarity Weights (Prototype Design Choice)
+const FINGERPRINT_WEIGHTS = {
+  pattern_sequence: 0.40,      // Jaccard similarity of transaction patterns
+  periodicity: 0.25,           // Gaussian interval similarity
+  protocol_transaction: 0.20,  // Jaccard similarity of function/transaction codes
+  communication_context: 0.15  // Direction and peer count match
+};
+
+// SITE-CONFIGURABLE Confidence Thresholds
+const CONFIDENCE_THRESHOLDS = {
+  HIGH: 0.85,
+  MEDIUM: 0.65,
+  LOW: 0.00
+};
+
+// Trusted Legacy Fingerprint Library
+// All entries are validated reference profiles. Quality affects match reliability.
+const TRUSTED_LEGACY_LIBRARY = [
+  {
+    profile_id: "FPL-001",
+    name: "Legacy PLC Model A",
+    vendor: "Schneider Electric (Modicon)",
+    type: "PLC",
+    protocols: ["Modbus TCP"],
+    periodicity_ms: 500,
+    interval_tolerance_ms: 50,
+    communication_direction: "master-slave",
+    peer_count_bucket: "low", // 1-2 peers
+    pattern_sequence: ["FC03", "FC06", "FC03"],
+    transaction_types: ["FC03", "FC06"],
+    packet_length_mode: 64,
+    description: "Legacy controller using standard Modbus function codes FC03 (read holding registers) and FC06 (write single register) in a repetitive polling loop."
+  },
+  {
+    profile_id: "FPL-002",
+    name: "Legacy RTU Model B",
+    vendor: "Siemens (S5-series)",
+    type: "RTU",
+    protocols: ["S7comm"],
+    periodicity_ms: 1000,
+    interval_tolerance_ms: 100,
+    communication_direction: "master-slave",
+    peer_count_bucket: "low",
+    pattern_sequence: ["SETUP-COMM", "READ-VAR", "READ-VAR"],
+    transaction_types: ["SETUP-COMM", "READ-VAR"],
+    packet_length_mode: 82,
+    description: "Telemetry unit communicating via S7comm protocol. Standard cyclic read queries observed during normal scan rate."
+  },
+  {
+    profile_id: "FPL-003",
+    name: "Controller Model C",
+    vendor: "Rockwell Automation (ControlLogix 5550)",
+    type: "PLC",
+    protocols: ["EtherNet/IP"],
+    periodicity_ms: 250,
+    interval_tolerance_ms: 25,
+    communication_direction: "peer-to-peer",
+    peer_count_bucket: "medium", // 3-5 peers
+    pattern_sequence: ["CIP-FORWARD-OPEN", "CIP-READ-TAG", "CIP-READ-TAG"],
+    transaction_types: ["CIP-FORWARD-OPEN", "CIP-READ-TAG", "CIP-WRITE-TAG"],
+    packet_length_mode: 128,
+    description: "Mid-generation controller using EtherNet/IP CIP messages. Frequent CIP tag reads over active sessions."
+  },
+  {
+    profile_id: "FPL-004",
+    name: "Legacy SIS Controller S9",
+    vendor: "Triconex (Tricon v9)",
+    type: "SIS Controller",
+    protocols: ["Modbus TCP"],
+    periodicity_ms: 100,
+    interval_tolerance_ms: 10,
+    communication_direction: "master-slave",
+    peer_count_bucket: "low",
+    pattern_sequence: ["FC03", "FC03", "FC03"],
+    transaction_types: ["FC03"],
+    packet_length_mode: 60,
+    description: "Safety Instrumented System (SIS). Extremely strict read-only Modbus sequence at high frequency (100ms interval) to report safety tags."
+  },
+  {
+    profile_id: "FPL-005",
+    name: "Legacy RTU Model D",
+    vendor: "GE Harris (D20)",
+    type: "RTU",
+    protocols: ["DNP3"],
+    periodicity_ms: 2000,
+    interval_tolerance_ms: 200,
+    communication_direction: "master-slave",
+    peer_count_bucket: "low",
+    pattern_sequence: ["READ-CLASS1", "READ-CLASS2", "READ-CLASS0"],
+    transaction_types: ["READ-CLASS0", "READ-CLASS1", "READ-CLASS2", "CONFIRM"],
+    packet_length_mode: 110,
+    description: "DNP3 outstation with cyclic class data polling. Generates regular polling events every 2 seconds."
+  }
+];
+
+// Fictional Plant Alpha Assets (18 Assets)
+let INITIAL_ASSETS = [
+  {
+    asset_id: "SENS-L0-01",
+    display_name: "Flow Sensor F-101",
+    purdue_level: 0,
+    zone: "Process Area A",
+    type: "Flow Sensor",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "MEDIUM",
+    state: "HUMAN VERIFIED",
+    protocols_observed: ["Hardwired (Analog 4-20mA)"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T07:58:10Z",
+    vendor_interaction_allowed: false,
+    maintenance_window: null,
+    evidence_sources: ["ENG-SCHEMATICS", "PLC-L1-03-CONFIG"],
+    verified_identity: "Rosemount 3051S",
+    confidence_score: 1.0,
+    conflicts: [],
+    verification_history: [
+      { timestamp: "2026-08-05T09:00:00Z", action: "Manual physical verification", user: "OT-Engineer-01", result: "Verified" }
+    ]
+  },
+  {
+    asset_id: "SENS-L0-02",
+    display_name: "Pressure Sensor P-102",
+    purdue_level: 0,
+    zone: "Process Area B",
+    type: "Pressure Sensor",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "LOW",
+    state: "OBSERVED",
+    protocols_observed: ["HART Protocol"],
+    first_seen: "2026-08-02T10:15:00Z",
+    last_observed: "2026-08-25T08:12:30Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: null,
+    evidence_sources: ["SPAN-PORT-02"],
+    verified_identity: null,
+    confidence_score: null,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "PLC-L1-01",
+    display_name: "Water Circulation PLC",
+    purdue_level: 1,
+    zone: "Process Area A",
+    type: "PLC",
+    production_state: "ACTIVE",
+    legacy_flag: true,
+    criticality: "HIGH",
+    state: "LIKELY IDENTIFIED",
+    protocols_observed: ["Modbus TCP"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T08:15:00Z",
+    vendor_interaction_allowed: false,
+    maintenance_window: "Weekly Sunday 02:00-04:00",
+    evidence_sources: ["SPAN-PORT-01"],
+    verified_identity: "Legacy PLC Model A",
+    confidence_score: 0.87,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "PLC-L1-03",
+    display_name: "Boiler Control PLC",
+    purdue_level: 1,
+    zone: "Process Area A",
+    type: "PLC",
+    production_state: "ACTIVE",
+    legacy_flag: true,
+    criticality: "HIGH",
+    state: "HUMAN VERIFIED",
+    protocols_observed: ["S7comm"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T08:10:00Z",
+    vendor_interaction_allowed: false,
+    maintenance_window: "Monthly 1st Saturday",
+    evidence_sources: ["SPAN-PORT-01", "CMDB-2025"],
+    verified_identity: "Legacy RTU Model B",
+    confidence_score: 0.98,
+    conflicts: [],
+    verification_history: [
+      { timestamp: "2026-08-10T14:30:00Z", action: "Engineering Project File Upload Match", user: "OT-Engineer-02", result: "Verified Match" }
+    ]
+  },
+  {
+    asset_id: "UNKNOWN-L1-07",
+    display_name: "Unknown Device 07",
+    purdue_level: 1,
+    zone: "Process Area A",
+    type: "Unknown",
+    production_state: "ACTIVE",
+    legacy_flag: true,
+    criticality: "HIGH",
+    state: "OBSERVED",
+    protocols_observed: ["Modbus TCP"],
+    first_seen: "2026-08-20T11:04:12Z",
+    last_observed: "2026-08-25T09:02:11Z",
+    vendor_interaction_allowed: false,
+    maintenance_window: "Weekly Sunday 00:00-02:00",
+    evidence_sources: ["SPAN-PORT-01"],
+    verified_identity: null,
+    confidence_score: null,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "UNKNOWN-L1-12",
+    display_name: "Unknown Device 12",
+    purdue_level: 1,
+    zone: "Process Area B",
+    type: "Unknown",
+    production_state: "ACTIVE",
+    legacy_flag: true,
+    criticality: "HIGH",
+    state: "OBSERVED",
+    protocols_observed: ["Modbus TCP"],
+    first_seen: "2026-08-22T14:20:00Z",
+    last_observed: "2026-08-25T09:05:00Z",
+    vendor_interaction_allowed: false,
+    maintenance_window: "Scheduled Maintenance Window Active",
+    evidence_sources: ["SPAN-PORT-02", "CMDB-IMPORT"],
+    verified_identity: null,
+    confidence_score: null,
+    conflicts: [
+      { source_a: "CMDB-IMPORT", value_a: "HMI Terminal", source_b: "Fingerprint Analysis", value_b: "Engineering Workstation or Controller Profile" }
+    ],
+    verification_history: []
+  },
+  {
+    asset_id: "RTU-L1-03",
+    display_name: "Pipeline Inflow RTU",
+    purdue_level: 1,
+    zone: "Remote Site B",
+    type: "RTU",
+    production_state: "ACTIVE",
+    legacy_flag: true,
+    criticality: "MEDIUM",
+    state: "LIKELY IDENTIFIED",
+    protocols_observed: ["DNP3"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T08:19:15Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: "Bi-weekly Tuesdays",
+    evidence_sources: ["LOG-BROKER-01"],
+    verified_identity: "Legacy RTU Model D",
+    confidence_score: 0.79,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "SIS-L1-09",
+    display_name: "Emergency Shutdown SIS",
+    purdue_level: 1,
+    zone: "Process Area A",
+    type: "SIS Controller",
+    production_state: "ACTIVE",
+    legacy_flag: true,
+    criticality: "SAFETY-CRITICAL",
+    state: "NEEDS REVIEW",
+    protocols_observed: ["Modbus TCP"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T08:45:00Z",
+    vendor_interaction_allowed: false,
+    maintenance_window: "Annual Shutdown Only",
+    evidence_sources: ["SPAN-PORT-01"],
+    verified_identity: null,
+    confidence_score: 0.45,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "HMI-L2-02",
+    display_name: "Operator Console HMI-02",
+    purdue_level: 2,
+    zone: "Process Area A",
+    type: "HMI",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "MEDIUM",
+    state: "HUMAN VERIFIED",
+    protocols_observed: ["HTTP", "EtherNet/IP"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T08:50:00Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: null,
+    evidence_sources: ["CMDB-2025", "SPAN-PORT-01"],
+    verified_identity: "Rockwell PanelView Plus",
+    confidence_score: 1.0,
+    conflicts: [],
+    verification_history: [
+      { timestamp: "2026-08-03T11:00:00Z", action: "IP-MAC pairing audit", user: "Sec-Analyst-01", result: "Verified Console" }
+    ]
+  },
+  {
+    asset_id: "EWS-L2-04",
+    display_name: "Engineering Station EWS-04",
+    purdue_level: 2,
+    zone: "Process Area A",
+    type: "Engineering WS",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "MEDIUM",
+    state: "OBSERVED",
+    protocols_observed: ["S7comm", "HTTP"],
+    first_seen: "2026-08-05T08:00:00Z",
+    last_observed: "2026-08-25T08:58:00Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: null,
+    evidence_sources: ["SPAN-PORT-01"],
+    verified_identity: null,
+    confidence_score: null,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "SCADA-L2-01",
+    display_name: "SCADA Primary Server",
+    purdue_level: 2,
+    zone: "Process Area A",
+    type: "SCADA Server",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "HIGH",
+    state: "HUMAN VERIFIED",
+    protocols_observed: ["Modbus TCP", "DNP3", "S7comm"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T09:00:00Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: "Quarterly patching window",
+    evidence_sources: ["CMDB-2025", "SPAN-PORT-01"],
+    verified_identity: "Ignition Gateway Server v8.1",
+    confidence_score: 1.0,
+    conflicts: [],
+    verification_history: [
+      { timestamp: "2026-08-01T08:00:00Z", action: "System Commissioning Sign-off", user: "Lead-Ops-01", result: "Approved Host" }
+    ]
+  },
+  {
+    asset_id: "HIST-L3-01",
+    display_name: "Process Historian",
+    purdue_level: 3,
+    zone: "Process Area A",
+    type: "Historian",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "MEDIUM",
+    state: "HUMAN VERIFIED",
+    protocols_observed: ["OPC UA", "HTTPS"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T09:00:00Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: null,
+    evidence_sources: ["CMDB-2025", "SPAN-PORT-01"],
+    verified_identity: "OSIsoft PI Server",
+    confidence_score: 1.0,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "OPS-L3-02",
+    display_name: "Site Operations Server",
+    purdue_level: 3,
+    zone: "Process Area B",
+    type: "Ops Server",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "LOW",
+    state: "OBSERVED",
+    protocols_observed: ["SMB", "RDP"],
+    first_seen: "2026-08-04T07:12:00Z",
+    last_observed: "2026-08-25T08:44:10Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: null,
+    evidence_sources: ["LOG-BROKER-01"],
+    verified_identity: null,
+    confidence_score: null,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "STALE-L3-05",
+    display_name: "Unknown Offline Host 05",
+    purdue_level: 3,
+    zone: "Process Area A",
+    type: "Unknown",
+    production_state: "UNKNOWN",
+    legacy_flag: true,
+    criticality: "LOW",
+    state: "OBSERVED",
+    protocols_observed: ["Modbus TCP"],
+    first_seen: "2024-06-12T10:00:00Z",
+    last_observed: "2025-06-25T14:30:00Z",
+    vendor_interaction_allowed: false,
+    maintenance_window: null,
+    evidence_sources: ["CMDB-2024-BACKUP"],
+    verified_identity: null,
+    confidence_score: null,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "JUMP-L35-01",
+    display_name: "IDMZ Jump Host",
+    purdue_level: 3.5,
+    zone: "Industrial DMZ",
+    type: "Jump Server",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "HIGH",
+    state: "HUMAN VERIFIED",
+    protocols_observed: ["SSH", "HTTPS"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T09:00:00Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: "Weekly Thursday 04:00-06:00",
+    evidence_sources: ["CMDB-2025", "FIREWALL-SYS-01"],
+    verified_identity: "Linux Bastion Host",
+    confidence_score: 1.0,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "LOG-L35-02",
+    display_name: "Syslog Collector Broker",
+    purdue_level: 3.5,
+    zone: "Industrial DMZ",
+    type: "Log Broker",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "MEDIUM",
+    state: "HUMAN VERIFIED",
+    protocols_observed: ["Syslog (TLS)", "HTTPS"],
+    first_seen: "2026-08-01T06:14:22Z",
+    last_observed: "2026-08-25T08:59:45Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: null,
+    evidence_sources: ["CMDB-2025", "FIREWALL-SYS-01"],
+    verified_identity: "Elasticsearch Node",
+    confidence_score: 1.0,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "SOC-L4-01",
+    display_name: "Enterprise SOC VM",
+    purdue_level: 4.5,
+    zone: "Enterprise IT",
+    type: "SOC Workstation",
+    production_state: "ACTIVE",
+    legacy_flag: false,
+    criticality: "LOW",
+    state: "OBSERVED",
+    protocols_observed: ["RDP", "HTTPS"],
+    first_seen: "2026-08-10T09:30:00Z",
+    last_observed: "2026-08-25T09:00:00Z",
+    vendor_interaction_allowed: true,
+    maintenance_window: null,
+    evidence_sources: ["DOMAIN-CONTROLLER-01"],
+    verified_identity: "Windows 11 Enterprise",
+    confidence_score: 1.0,
+    conflicts: [],
+    verification_history: []
+  },
+  {
+    asset_id: "CONFLICT-L2-08",
+    display_name: "Mismatched Controller",
+    purdue_level: 2,
+    zone: "Process Area B",
+    type: "Unknown",
+    production_state: "ACTIVE",
+    legacy_flag: true,
+    criticality: "MEDIUM",
+    state: "NEEDS REVIEW",
+    protocols_observed: ["Modbus TCP"],
+    first_seen: "2026-08-15T08:00:00Z",
+    last_observed: "2026-08-25T08:40:00Z",
+    vendor_interaction_allowed: false,
+    maintenance_window: null,
+    evidence_sources: ["CMDB-IMPORT", "SPAN-PORT-02"],
+    verified_identity: null,
+    confidence_score: 0.62,
+    conflicts: [
+      { source_a: "CMDB-IMPORT", value_a: "HMI Panel v4.0", source_b: "Fingerprint Analysis", value_b: "Modbus PLC (periodicity 500ms, FC03)" }
+    ],
+    verification_history: []
+  }
+];
+
+// Fictional raw traffic metadata for testing fingerprinting engine
+const SYNTHETIC_TRAFFIC = {
+  "UNKNOWN-L1-07": {
+    dominant_protocol: "Modbus TCP",
+    transaction_types: ["FC03", "FC06"],
+    avg_interval_ms: 512,
+    periodicity_variance: 15, // std dev, low = highly periodic
+    packet_length_mode: 64,
+    communication_direction: "master-slave",
+    peer_count: 2,
+    pattern_sequence: ["FC03", "FC06", "FC03"]
+  },
+  "UNKNOWN-L1-12": {
+    dominant_protocol: "Modbus TCP",
+    transaction_types: ["FC03", "FC43"],
+    avg_interval_ms: 780,
+    periodicity_variance: 180,
+    packet_length_mode: 72,
+    communication_direction: "master-slave",
+    peer_count: 1,
+    pattern_sequence: ["FC43", "FC03", "FC43"]
+  }
+};
+
+// Initial Governance / Audit logs
+let AUDIT_LOGS = [
+  {
+    record_id: "AUD-2026-0825-001",
+    timestamp: "2026-08-25T06:12:00Z",
+    type: "FINGERPRINT_DECISION",
+    asset_id: "PLC-L1-01",
+    requested_by: "OTrust Engine (Auto)",
+    decision: "NO_ACTIVE_VERIFICATION_REQUIRED",
+    confidence: "HIGH",
+    top_candidate: "Legacy PLC Model A (Similarity: 87%)",
+    active_interaction_avoided: true,
+    details: "High similarity score (87%) combined with known legacy profile and production active state triggered a default stop decision."
+  },
+  {
+    record_id: "AUD-2026-0825-002",
+    timestamp: "2026-08-25T07:15:20Z",
+    type: "FINGERPRINT_DECISION",
+    asset_id: "RTU-L1-03",
+    requested_by: "OTrust Engine (Auto)",
+    decision: "NO_ACTIVE_VERIFICATION_REQUIRED",
+    confidence: "MEDIUM (Escalated)",
+    top_candidate: "Legacy RTU Model D (Similarity: 79%)",
+    active_interaction_avoided: true,
+    details: "Criticality is MEDIUM. Similarity (79%) falls into medium zone; site policy selected auto-deferral due to remote network constraints."
+  },
+  {
+    record_id: "AUD-2026-0825-003",
+    timestamp: "2026-08-25T07:45:00Z",
+    type: "VIRTUAL_PREFLIGHT_FAIL",
+    asset_id: "SIS-L1-09",
+    requested_by: "OT-Analyst-02",
+    decision: "DEFERRED (HARD-BLOCK)",
+    confidence: "LOW",
+    top_candidate: "Legacy SIS Controller S9 (Similarity: 45%)",
+    active_interaction_avoided: true,
+    details: "Safety-Critical L1 asset. Preflight blocked. Production state is ACTIVE. Read-only validation deferred until scheduled shutdown."
+  }
+];
+
+// Active interactions avoided metric
+let INITIAL_INTERACTIONS_AVOIDED = 19;

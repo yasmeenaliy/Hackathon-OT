@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTrust Console — Operational OT Security Platform</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header Command-Bar -->
+  <header class="command-bar">
+    <div class="brand-section" onclick="switchPage('page-overview')">
+      <div class="brand-name">OTrust</div>
+      <div class="brand-tagline">| Operational Security Console</div>
+    </div>
+    
+    <nav class="nav-links">
+      <div class="nav-link active" data-page="page-overview">Overview</div>
+      <div class="nav-link" data-page="page-fingerprint">01 Observe</div>
+      <div class="nav-link" data-page="page-preflight">02 Verify</div>
+      <div class="nav-link" data-page="page-future">03 Understand</div>
+    </nav>
+    
+    <div class="env-context">
+      Plant Alpha &middot; Local Simulation
+    </div>
+  </header>
+
+  <!-- Main Content Space -->
+  <main>
+
+    <!-- PAGE 1: OVERVIEW (PRODUCT ENTRY EXPERIENCE) -->
+    <section id="page-overview" class="page active">
+      <div class="overview-layout">
+        <!-- Left: live command indicators -->
+        <div class="overview-narrative">
+          <h1>Passive OT Reconnaissance</h1>
+          <h3>Active capture interface online.</h3>
+          
+          <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+            <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px; display: flex; align-items: center; gap: 1rem;">
+              <span style="display:inline-block; width:8px; height:8px; background-color:var(--status-pass); border-radius:50%; animation: signalDotPulse 1.5s infinite ease-in-out;"></span>
+              <div>
+                <div style="font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem;">Interface: SPAN_PORT_01</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono)">14.2 Mbps &middot; 0 packet drops &middot; CAPTURING</div>
+              </div>
+            </div>
+            <div style="background-color: var(--bg-secondary); border: 1px solid var(--border-color); padding: 1rem; border-radius: 4px; display: flex; align-items: center; gap: 1rem;">
+              <span style="display:inline-block; width:8px; height:8px; background-color:var(--status-pass); border-radius:50%; animation: signalDotPulse 1.5s infinite ease-in-out;"></span>
+              <div>
+                <div style="font-weight: 700; font-family: var(--font-mono); font-size: 0.85rem;">Interface: SPAN_PORT_02</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono)">8.7 Mbps &middot; 0 packet drops &middot; CAPTURING</div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="margin-top: 2rem;">
+            <button class="btn" onclick="switchPage('page-fingerprint')">
+              Launch Telemetry Analyzer
+            </button>
+          </div>
+        </div>
+        
+        <!-- Right: metrics dashboard -->
+        <div class="overview-metrics">
+          <div class="workspace-section-title">Operational metrics</div>
+          
+          <div class="giant-metric-row">
+            <span class="giant-metric-num" id="stat-avoided">0</span>
+            <div class="giant-metric-label">
+              Interactions Avoided
+              <span style="font-size:0.75rem; color:var(--text-muted); display:block; font-weight:normal; margin-top:0.25rem; font-family:var(--font-mono);">Avoided legacy device scans</span>
+            </div>
+          </div>
+          
+          <!-- Hidden structures for overview metrics computation -->
+          <div style="display:none;">
+            <span id="stat-observed">0</span>
+            <span id="stat-legacy">0</span>
+            <span id="stat-unknown">0</span>
+            <span id="stat-likely">0</span>
+            <span id="stat-verified">0</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+            <div style="background: var(--bg-primary); padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Observed Devices</div>
+              <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono)" id="stat-total-disp">18</div>
+            </div>
+            <div style="background: var(--bg-primary); padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 4px;">
+              <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Unidentified Assets</div>
+              <div style="font-size: 1.5rem; font-weight: 800; font-family: var(--font-mono); color: var(--status-warn);" id="stat-unknown-disp">2</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 2: 01 OBSERVE (BEHAVIORAL FINGERPRINT) -->
+    <section id="page-fingerprint" class="page">
+      <div style="margin-bottom:1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+        <h2 class="section-title" style="margin-bottom:0; font-size: 1.4rem;">01 Passive Behavioral Fingerprinting</h2>
+        
+        <!-- Case switcher button toggle -->
+        <div class="case-switcher">
+          <button class="case-btn active" id="btn-case-01">Inspect Interface: SPAN-01</button>
+          <button class="case-btn" id="btn-case-02">Inspect Interface: SPAN-02</button>
+        </div>
+      </div>
+
+      <div class="observe-canvas">
+        <!-- LEFT: Telemetry stream & dossier -->
+        <div class="observe-col">
+          <div class="workspace-section-title">Passive Telemetry Stream</div>
+          <div class="device-node-container" style="align-items: stretch; text-align: left;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+              <div class="device-node-box" style="width: 48px; height: 48px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12" y2="18.01"></line></svg>
+              </div>
+              <div>
+                <div class="device-node-name" id="scen-asset-id" style="font-size: 1rem;">—</div>
+                <div class="device-node-desc" id="scen-asset-name" style="font-size:0.75rem; color:var(--text-secondary); font-family:var(--font-mono)">—</div>
+              </div>
+            </div>
+            
+            <div class="device-node-meta" style="justify-content: flex-start; margin-bottom: 0.75rem;">
+              <span class="meta-tag legacy">Legacy</span>
+              <span class="meta-tag crit" id="scen-asset-criticality">—</span>
+              <span class="meta-tag" style="border-color:var(--accent-primary); color:var(--accent-primary);">L<span id="scen-asset-level">—</span></span>
+            </div>
+
+            <!-- Telemetry list -->
+            <div class="traffic-chip-flow" id="scen-traffic-details" style="margin-bottom: 1rem;">
+              <!-- Dynamic chips list -->
+            </div>
+
+            <!-- Ingress Telemetry Stream -->
+            <div class="workspace-section-title" style="margin-top: 0.5rem;">Live Telemetry Frame capture</div>
+            <div id="scen-traffic-stream" style="background-color: var(--bg-primary); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 4px; height: 120px; overflow-y: auto; font-family: var(--font-mono); font-size: 0.7rem; color: var(--status-pass); line-height: 1.4;">
+              <!-- Realtime log entries -->
+            </div>
+          </div>
+        </div>
+
+        <!-- CENTER: Behavior Analysis Trace Animation -->
+        <div class="observe-col">
+          <div class="workspace-section-title" style="text-align:center;">Jaccard Match Convergence</div>
+          <div class="observe-center-workspace" id="fingerprint-results-area">
+            <!-- CTA button or pulse animation -->
+          </div>
+        </div>
+
+        <!-- RIGHT: Identity Resolution & Decisions -->
+        <div class="observe-col" id="fp-right-panel">
+          <!-- Decisions and matches -->
+        </div>
+      </div>
+
+      <!-- Hidden nodes for page 3 risk spectrum mapping -->
+      <div id="fingerprint-risk-spectrum" style="display:none;">
+        <div class="risk-spectrum-node" data-step="existing"></div>
+        <div class="risk-spectrum-node" data-step="passive"></div>
+        <div class="risk-spectrum-node" data-step="targeted"></div>
+        <div class="risk-spectrum-node" data-step="bounded"></div>
+        <div class="risk-spectrum-node" data-step="aggressive"></div>
+      </div>
+      <span id="fingerprint-risk-banner" style="display:none;"></span>
+    </section>
+
+    <!-- PAGE 3: 02 VERIFY (VIRTUAL PREFLIGHT SIMULATOR) -->
+    <section id="page-preflight" class="page">
+      <div style="margin-bottom:1.5rem; display: flex; justify-content: space-between; align-items: center; border-bottom:1px solid var(--border-color); padding-bottom:0.75rem;">
+        <div>
+          <h2 class="section-title" style="margin-bottom:0.15rem; font-size: 1.3rem; font-weight: 800;">Unknown Device 12</h2>
+          <div style="font-size: 0.8rem; color: var(--status-warn); font-weight: 600; font-family: var(--font-mono)">Low confidence &middot; Additional verification needed</div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 2rem;">
+          <div style="font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--text-muted); background: var(--bg-secondary); border: 1px solid var(--border-color); padding: 0.35rem 0.75rem; border-radius: 3px;">
+            Observe &rarr; <span style="color: var(--accent-primary);">Verify</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 700;">Site Condition:</span>
+            <div class="case-switcher" style="margin-bottom:0;">
+              <button class="case-btn active" id="btn-preflight-deferred">Production Mode (No Window)</button>
+              <button class="case-btn" id="btn-preflight-eligible">Maintenance Mode (Active Window)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline Workspace Grid -->
+      <div class="verify-pipeline" id="preflight-simulator-area">
+        <!-- 3 columns layout -->
+      </div>
+
+      <!-- Execution Journey under preflight -->
+      <div class="risk-spectrum-container" style="margin-top: 1.5rem; padding: 0.75rem 1.5rem;">
+        <div class="risk-spectrum-track" id="preflight-risk-spectrum" style="margin-bottom:0.25rem;">
+          <div class="risk-spectrum-node" data-step="prepare">
+            <div class="risk-node-dot"></div>
+            <div class="risk-node-label">Prepare</div>
+          </div>
+          <div class="risk-spectrum-node" data-step="preflight">
+            <div class="risk-node-dot"></div>
+            <div class="risk-node-label">Preflight</div>
+          </div>
+          <div class="risk-spectrum-node" data-step="authorize">
+            <div class="risk-node-dot"></div>
+            <div class="risk-node-label">Authorize</div>
+          </div>
+          <div class="risk-spectrum-node" data-step="simulate">
+            <div class="risk-node-dot"></div>
+            <div class="risk-node-label">Simulate</div>
+          </div>
+        </div>
+        <div class="risk-marker-info" id="preflight-risk-banner" style="font-weight: 600; font-size: 0.75rem; text-align: center;">
+          Status: Awaiting preflight simulation.
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 4: 03 UNDERSTAND (FUTURE GRAPH) -->
+    <section id="page-future" class="page">
+      <div style="border-left:4px solid var(--accent-future); padding-left:1.25rem; margin-bottom:2rem;">
+        <h2 style="font-size:1.75rem; font-weight:800; margin-bottom:0.25rem;">From asset identity to operational meaning</h2>
+      </div>
+
+      <div class="understand-layout">
+        <!-- Visual dependency graph -->
+        <div class="understand-canvas" id="future-graph-canvas">
+          <svg class="graph-edge-svg" id="graph-svg">
+            <path id="graph-edges" d="" stroke="#374151" stroke-width="2" fill="none" stroke-dasharray="4,4" />
+            <path id="graph-highlight-path" d="" stroke="var(--accent-primary)" stroke-width="2" fill="none" style="transition: stroke-dashoffset 1s ease; display: none;" />
+          </svg>
+          
+          <!-- Nodes -->
+          <div class="node node-plc" id="node-plc" style="cursor: pointer;">
+            <span class="node-dot" style="background-color: var(--accent-future)"></span>
+            <div>
+              <strong>PLC-17</strong>
+              <div class="node-text-sub">Legacy Controller</div>
+            </div>
+          </div>
+          
+          <div class="node node-hmi" id="node-hmi">
+            <span class="node-dot" style="background-color: var(--text-muted)"></span>
+            <div>
+              <strong>HMI-04</strong>
+              <div class="node-text-sub">Operator Panel</div>
+            </div>
+          </div>
+
+          <div class="node node-pump" id="node-pump">
+            <span class="node-dot" style="background-color: var(--accent-primary)"></span>
+            <div>
+              <strong>Pump P-101</strong>
+              <div class="node-text-sub">Circulation loop</div>
+            </div>
+          </div>
+
+          <div class="node node-pump" id="node-valve">
+            <span class="node-dot" style="background-color: var(--accent-primary)"></span>
+            <div>
+              <strong>Valve V-09</strong>
+              <div class="node-text-sub">Bypass flow</div>
+            </div>
+          </div>
+
+          <div class="node node-sensor" id="node-sensor">
+            <span class="node-dot" style="background-color: var(--text-muted)"></span>
+            <div>
+              <strong>Flow Sensor-12</strong>
+              <div class="node-text-sub">Rate telemetry</div>
+            </div>
+          </div>
+
+          <div class="node node-unit" id="node-unit">
+            <span class="node-dot" style="background-color: var(--text-secondary)"></span>
+            <div>
+              <strong>Cooling Water Unit</strong>
+              <div class="node-text-sub">Auxiliary cooling</div>
+            </div>
+          </div>
+
+          <div class="node node-flow" id="node-flow">
+            <span class="node-dot" style="background-color: var(--status-pass)"></span>
+            <div>
+              <strong>Circulation Flow</strong>
+              <div class="node-text-sub">Process variable</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side Click Highlight Result panel -->
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+          <div class="workspace-section-title">Operational Dependency Map</div>
+          <div id="future-criticality-display" style="flex-grow: 1;">
+            <div style="background-color: var(--bg-secondary); border: 1px dashed var(--border-color); border-radius: 6px; padding: 2rem; text-align: center; color: var(--text-muted); display:flex; align-items:center; justify-content:center; height:100%;">
+            Select any node to map its operational dependencies and process role.
+            </div>
+          </div>
+          
+          <div style="border-top:1px solid var(--border-color); padding-top:1rem; font-size:0.75rem; color:var(--text-muted); display:flex; justify-content:space-between; font-family:var(--font-mono)">
+            <span>Process Intelligence</span>
+            <span>Site-Calibrated AI</span>
+            <span>Enterprise Scale</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DRAWER 1: ASSETS EXPLORER (SUPPORTING PANEL) -->
+    <div class="drawer-panel" id="drawer-assets">
+      <div class="drawer-header">
+        <h3>Assets Matrix Inventory</h3>
+        <button class="drawer-close" id="btn-close-assets">&times;</button>
+      </div>
+      <div class="drawer-body">
+        <div style="margin-bottom: 1rem;">
+          <input type="text" id="asset-map-search" placeholder="Search ID or display name..." style="background-color: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 4px; width: 100%; font-weight:600; outline:none; font-family:var(--font-mono)">
+        </div>
+        
+        <div class="asset-explorer-list" id="asset-explorer-rows">
+          <!-- Explorer rows -->
+        </div>
+
+        <!-- Hidden components to satisfy app.js dependencies -->
+        <div style="display:none;" id="lane-l0"></div>
+        <div style="display:none;" id="lane-l1"></div>
+        <div style="display:none;" id="lane-l2"></div>
+        <div style="display:none;" id="lane-l3"></div>
+        <div style="display:none;" id="lane-l35"></div>
+        <div style="display:none;" id="lane-l45"></div>
+        <span id="btn-toggle-policy" style="display:none;"></span>
+        <div id="policy-drawer" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- DRAWER 2: GOVERNANCE DRAWER (SUPPORTING PANEL) -->
+    <div class="drawer-panel" id="drawer-governance">
+      <div class="drawer-header">
+        <h3>Governance Security Ledger</h3>
+        <button class="drawer-close" id="btn-close-gov">&times;</button>
+      </div>
+      <div class="drawer-body">
+        <div style="display:flex; justify-content:space-between; margin-bottom:1.5rem; border-bottom:1px solid var(--border-color); padding-bottom:1rem; text-align:center;">
+          <div>
+            <div style="font-size: 1.5rem; font-weight: 800; font-family:var(--font-mono)" id="gov-stat-avoided">0</div>
+            <div style="font-size:0.75rem; color:var(--text-muted)">Interactions Avoided</div>
+          </div>
+          <div>
+            <div style="font-size: 1.5rem; font-weight: 800; color:var(--status-warn); font-family:var(--font-mono)" id="gov-stat-conflicts">0</div>
+            <div style="font-size:0.75rem; color:var(--text-muted)">Conflicts</div>
+          </div>
+          <div>
+            <div style="font-size: 1.5rem; font-weight: 800; color:var(--text-muted); font-family:var(--font-mono)" id="gov-stat-stale">0</div>
+            <div style="font-size:0.75rem; color:var(--text-muted)">Stale Records</div>
+          </div>
+        </div>
+
+        <table class="gov-drawer-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Asset</th>
+              <th>Outcome</th>
+            </tr>
+          </thead>
+          <tbody id="gov-audit-tbody">
+            <!-- Table rows -->
+          </tbody>
+        </table>
+        
+        <!-- Hidden elements to satisfy app.js dependencies -->
+        <div style="display:none;">
+          <div id="dist-high" style="width:0%;"></div>
+          <span id="dist-high-lbl">0%</span>
+          <div id="dist-med" style="width:0%;"></div>
+          <span id="dist-med-lbl">0%</span>
+          <div id="dist-low" style="width:0%;"></div>
+          <span id="dist-low-lbl">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRAWER 3: TECHNICAL DETAILS DRAWER -->
+    <div class="drawer-panel" id="tech-details-drawer">
+      <div class="drawer-header">
+        <h3>Technical Specifications</h3>
+        <button class="drawer-close" id="btn-close-tech">&times;</button>
+      </div>
+      <div class="drawer-body" style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">
+        <div class="workspace-section-title">Fingerprint Algorithm Math</div>
+        <p style="margin-bottom:1rem;">OTrust uses weighted Jaccard similarity and Gaussian distribution function parameters on periodic cycle times.</p>
+        <div style="background-color:var(--bg-primary); padding:1rem; border-radius:4px; font-family:var(--font-mono); margin-bottom:1.5rem; border: 1px solid var(--border-color);">
+          Jaccard = |S_obs &cap; S_lib| / |S_obs &cup; S_lib|
+        </div>
+        
+        <div class="workspace-section-title">Decision Factor Weights</div>
+        <div class="details-grid" style="margin-bottom:1.5rem;">
+          <div class="details-grid-row"><span>Transaction Sequence Pattern</span> <strong>35% Weight</strong></div>
+          <div class="details-grid-row"><span>Cyclic period interval variance</span> <strong>30% Weight</strong></div>
+          <div class="details-grid-row"><span>Read-only protocol matching</span> <strong>20% Weight</strong></div>
+          <div class="details-grid-row"><span>Context peer counts</span> <strong>15% Weight</strong></div>
+        </div>
+
+        <div class="workspace-section-title">Local Environment Info</div>
+        <div class="details-grid">
+          <div class="details-grid-row"><span>Plant Mode</span> <strong>Local Simulation Mode</strong></div>
+          <div class="details-grid-row"><span>Database status</span> <strong>18 Synthetics Enrolled</strong></div>
+          <div class="details-grid-row"><span>Lease Duration</span> <strong>120 seconds</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE OUT PROFILE PANEL DRAWER -->
+    <div class="slide-panel" id="profile-panel">
+      <div class="slide-panel-header">
+        <h3 id="prof-name" style="font-weight:700;">Asset Name</h3>
+        <button class="slide-panel-close" id="panel-close-btn">&times;</button>
+      </div>
+      <div class="slide-panel-body">
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+          <span style="font-size:0.85rem; color:var(--text-secondary);">ID: <span id="prof-id" style="font-weight:600; color:var(--text-primary); font-family:var(--font-mono)">—</span></span>
+          <span id="prof-state-container" class="asset-pill-badge badge-observed">State</span>
+        </div>
+
+        <!-- Conflict notification container -->
+        <div id="prof-conflict-container"></div>
+
+        <!-- Details list -->
+        <div class="details-grid" style="margin-bottom:1.5rem; border-bottom:1px solid var(--border-color); padding-bottom:1.25rem;">
+          <div class="details-grid-row"><span>Purdue Level</span> <strong id="prof-purdue">—</strong></div>
+          <div class="details-grid-row"><span>Zone Segment</span> <strong id="prof-zone">—</strong></div>
+          <div class="details-grid-row"><span>Criticality</span> <strong id="prof-criticality">—</strong></div>
+          <div class="details-grid-row"><span>Legacy Status</span> <strong id="prof-legacy">—</strong></div>
+          <div class="details-grid-row"><span>Protocols Parsed</span> <strong id="prof-protocols">—</strong></div>
+          <div class="details-grid-row"><span>Vendor Access Rule</span> <strong id="prof-vendor">—</strong></div>
+          <div class="details-grid-row"><span>Maintenance Window</span> <strong id="prof-window">—</strong></div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <div class="workspace-section-title">Traffic Evidence Context</div>
+          <div id="prof-evidence"></div>
+        </div>
+
+        <div style="margin-bottom:1.5rem;">
+          <div class="workspace-section-title">Verification Log History</div>
+          <p id="prof-history" style="font-size:0.75rem; color:var(--text-muted); line-height: 1.4; font-family:var(--font-mono);"></p>
+        </div>
+
+        <!-- Dynamic Action buttons -->
+        <div id="prof-actions-container"></div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Industrial Status Bar Footer -->
+  <footer class="status-bar" style="background-color: var(--bg-secondary); border-top: 1px solid var(--border-color); padding: 0.5rem 2rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted); flex-shrink: 0; height: 40px; box-sizing: border-box;">
+    <div style="display:flex; align-items:center;">
+      <span style="display:inline-block; width:8px; height:8px; background-color:var(--status-pass); border-radius:50%; margin-right:0.5rem; animation: signalDotPulse 1.5s infinite ease-in-out;"></span>
+      Active Link &middot; Security Engine ONLINE
+    </div>
+    <div style="display:flex; gap:1.5rem;">
+      <span id="nav-btn-assets" style="cursor:pointer; color:var(--text-secondary);">[ Assets Matrix ]</span>
+      <span id="nav-btn-governance" style="cursor:pointer; color:var(--text-secondary);">[ Audit Ledger ]</span>
+      <span id="btn-toggle-tech-details" style="cursor:pointer; color:var(--text-secondary);">[ Technical Specifications ]</span>
+    </div>
+  </footer>
+
+  <!-- Reference Data and App scripts -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
