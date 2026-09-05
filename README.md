@@ -1,6 +1,6 @@
 # OTrust
 
-> **Passive OT Asset Discovery Through Fingerprint Similarity and Digital-Twin-Assisted Validation**
+> **Passive OT Asset Discovery Through Fingerprint Similarity and Simulation Test Validation**
 
 OTrust is an operational technology (OT) cybersecurity prototype developed during the **Operational Technology Cybersecurity Hackathon**. It presents a passive-first methodology for safe asset discovery, identification, and validation in sensitive legacy industrial environments.
 
@@ -14,7 +14,7 @@ OTrust is an operational technology (OT) cybersecurity prototype developed durin
 - [Core Capabilities & Workflow](#core-capabilities--workflow)
   - [1. Overview & Telemetry Console](#1-overview--telemetry-console)
   - [2. 01 Observe: Passive Behavioral Fingerprinting](#2-01-observe-passive-behavioral-fingerprinting)
-  - [3. 02 Verify: Digital-Twin-Assisted Virtual Preflight](#3-02-verify-digital-twin-assisted-virtual-preflight)
+  - [3. 02 Verify: Simulation Test Virtual Preflight](#3-02-verify-simulation-test-virtual-preflight)
   - [4. 03 Understand: Operational Meaning & Dependency Mapping](#4-03-understand-operational-meaning--dependency-mapping)
 - [Repository Structure](#repository-structure)
 - [Quick Start](#quick-start)
@@ -27,7 +27,7 @@ OTrust is an operational technology (OT) cybersecurity prototype developed durin
 
 In legacy industrial control systems (ICS) and supervisory control and data acquisition (SCADA) environments, traditional active network scanning (e.g., ping sweeps, port scans) can trigger unexpected PLC halts, communication buffer overflows, or physical process disruption.
 
-**OTrust** eliminates the hazards of blind active scanning by utilizing passive network telemetry, explainable behavioral fingerprinting, and digital-twin preflight verification before any bounded active query is ever permitted.
+**OTrust** eliminates the hazards of blind active scanning by utilizing passive network telemetry, explainable behavioral fingerprinting, and simulation test preflight verification before any bounded active query is ever permitted.
 
 ---
 
@@ -59,7 +59,7 @@ In legacy industrial control systems (ICS) and supervisory control and data acqu
 [ High Confidence ]            [ Low Confidence / Ambiguous ]
 Auto-classified Asset                  │
                                        ▼
-                     [ Digital-Twin Virtual Preflight ]
+                     [ Simulation Test Virtual Preflight ]
                        • Safe simulated probe validation
                        • Maintenance window enforcement
                        • Human-in-the-loop authorization
@@ -79,12 +79,12 @@ Auto-classified Asset                  │
 - **Behavioral Profiling**: Evaluates protocol distribution, packet intervals, and functional operational traits.
 - **Jaccard Match Convergence**: Transparent, explainable algorithmic comparison matching observed signatures against known ICS profile libraries.
 
-### 3. 02 Verify: Digital-Twin-Assisted Virtual Preflight
+### 3. 02 Verify: Simulation Test Virtual Preflight
 - **Risk Spectrum Engine**: Staged pipeline transitioning from *Prepare* &rarr; *Preflight* &rarr; *Authorize* &rarr; *Simulate*.
 - **Site Condition Policy**:
   - **Production Mode**: Restricts any active testing to prevent disruption during active operations.
   - **Maintenance Mode**: Unlocks controlled preflight simulation within authorized maintenance windows.
-- **Synthetic Digital Twin**: Validates response safety in a simulated environment before physical interaction is considered.
+- **Simulation Test Environment**: Validates response safety in a simulated environment before physical interaction is considered.
 
 ### 4. 03 Understand: Operational Meaning & Dependency Mapping
 - **Interactive Topology Graph**: Connects controllers (e.g., `PLC-17`), HMIs (`HMI-04`), field actuators (`Pump P-101`, `Valve V-09`), and instrumentation (`Flow Sensor-12`).
